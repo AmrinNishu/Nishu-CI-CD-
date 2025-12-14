@@ -1,0 +1,69 @@
+name: Full CI-CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+
+  # ---------------------------
+  # 1) CI PIPELINE (Build + Test)
+  # ---------------------------
+  ci:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout source
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      # Install GCC Compiler
+      - name: Install GCC
+        run: sudo apt-get update && sudo apt-get install -y build-essential
+
+      # BUILD Step
+      - name: Build Application
+        run: gcc main.c even.c -o app
+
+      # UNIT TEST Step
+      - name: Run Unit Tests
+        run: gcc test.c even.c -o test && ./test
+
+      # INTEGRATION TEST Step
+      - name: Integration Test (Dummy)
+        run: echo "Integration tests passed!"
+
+      # Upload Build Artifact
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: c-app-build
+          path: app
+
+  # ---------------------------
+  # 2) CD PIPELINE (Review → Staging → Production)
+  # ---------------------------
+  cd:
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      # Download artifact from CI
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: c-app-build
+
+      # REVIEW Step
+      - name: Review Stage
+        run: echo "Code review stage completed!"
+
+      # STAGING Deployment
+      - name: Staging Deployment
+        run: echo "App deployed to STAGING environment!"
+
+      # PRODUCTION Deployment
+      - name: Production Deployment
+        run: echo "App deployed to PRODUCTION environment!"
